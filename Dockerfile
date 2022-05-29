@@ -23,6 +23,6 @@ FROM scratch AS bin-unix
 COPY --from=alpine:latest /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /app/honeypot /app/honeypot
 
-LABEL org.opencontainers.image.description A docker image for the honeypot telegram bot.
+LABEL org.opencontainers.image.description A docker image for the honeypot service.
 
 ENTRYPOINT ["/app/honeypot"]
