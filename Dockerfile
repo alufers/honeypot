@@ -3,7 +3,7 @@ ARG TARGETPLATFORM
 ARG BUILDPLATFORM
 
 # Git is required for fetching the dependencies.
-RUN apk update && apk add --no-cache git bash nodejs npm && mkdir -p /build/honeypot
+RUN apk update && apk add --no-cache git bash nodejs npm gcc   util-linux-dev musl-dev  && mkdir -p /build/honeypot
 
 WORKDIR /build/honeypot
 
@@ -14,7 +14,7 @@ RUN go mod download -json
 
 COPY . .
 
-RUN mkdir -p /app && (cd honeypot-frontend && npm i && npm run build) && CGO_ENABLED=0 GOOS=${TARGETPLATFORM%%/*} GOARCH=${TARGETPLATFORM##*/} \
+RUN mkdir -p /app && (cd honeypot-frontend && npm i && npm run build) && GOOS=${TARGETPLATFORM%%/*} GOARCH=${TARGETPLATFORM##*/} \
     go build -ldflags='-s -w -extldflags="-static"' -o /app/honeypot
 
 # RUN echo "Running on architecture: $(uname -m), BUILDPLATFORM=$BUILDPLATFORM, TARGETPLATFORM=$TARGETPLATFORM" && exit 1
