@@ -54,9 +54,10 @@ func handleTelnetConnection(conn net.Conn) {
 	reader := bufio.NewReader(conn)
 
 	attack = &Attack{
-		Protocol: "telnet",
-		SourceIP: strings.Split(conn.RemoteAddr().String(), ":")[0],
-		Contents: "",
+		Protocol:       "telnet",
+		SourceIP:       strings.Split(conn.RemoteAddr().String(), ":")[0],
+		Contents:       "",
+		Classification: "empty",
 	}
 
 	go func() {
@@ -71,7 +72,7 @@ func handleTelnetConnection(conn net.Conn) {
 			panic(err)
 		}
 	}
-	log.Printf("cuum")
+
 	if err := AttackStarted(attack); err != nil {
 		panic(err)
 	}
@@ -84,6 +85,7 @@ func handleTelnetConnection(conn net.Conn) {
 	if err := AttackUpdated(attack); err != nil {
 		panic(err)
 	}
+	attack.Classification = "username_entered"
 	write("Password:")
 	password, err := reader.ReadString('\n')
 	if err != nil {
@@ -91,6 +93,15 @@ func handleTelnetConnection(conn net.Conn) {
 	}
 	attack.Contents += password
 	if err := AttackUpdated(attack); err != nil {
+		panic(err)
+	}
+	attack.Classification = "authenticated"
+	credUsage := &CredentialUsage{
+		Protocol: "telnet",
+		Username: strings.TrimSpace(username),
+		Password: strings.TrimSpace(password),
+	}
+	if err := db.Create(credUsage).Error; err != nil {
 		panic(err)
 	}
 	for {
@@ -102,6 +113,7 @@ func handleTelnetConnection(conn net.Conn) {
 		timeoutTimer.Reset(afterFirstLineTimeout)
 
 		attack.Contents += line
+		attack.Classification = "command_entered"
 		if len(line) > maxContents {
 			attack.Contents = attack.Contents[:maxContents]
 			break

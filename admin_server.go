@@ -34,18 +34,29 @@ func RunAdminServer() {
 	})
 
 	app.Get("/api/attacks", func(c *fiber.Ctx) error {
-		log.Printf("debug: /api/attacks")
-		count, _ := strconv.Atoi(c.Query("count"))
+		query := struct {
+			Count           string   `query:"count"`
+			Before          string   `query:"before"`
+			Classifications []string `query:"classifications"`
+		}{}
+		if err := c.QueryParser(&query); err != nil {
+			return err
+		}
+		count, _ := strconv.Atoi(query.Count)
 		if count == 0 {
 			count = 10
 		}
-		before, _ := strconv.Atoi(c.Query("before"))
+		before, _ := strconv.Atoi(query.Before)
 		if before == 0 {
 			before = math.MaxInt
 		}
-		attacks := []*Attack{}
 
-		if err := db.Where("id < ?", before).Order("id desc").Limit(count).Find(&attacks).Error; err != nil {
+		var attacks = make([]*Attack, 0)
+		dbQuery := db.Where("id < ?", before)
+		if query.Classifications != nil && len(query.Classifications) > 0 {
+			dbQuery = dbQuery.Where("classification IN (?)", query.Classifications)
+		}
+		if err := dbQuery.Order("id desc").Limit(count).Find(&attacks).Error; err != nil {
 			log.Printf("failed to get attacks: %v", err)
 			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 		}
@@ -59,6 +70,16 @@ func RunAdminServer() {
 		}
 		return c.JSON(attacks)
 
+	})
+
+	app.Get("/api/attacks/stats/by-country", func(c *fiber.Ctx) error {
+		log.Printf("debug: /api/attacks/stats/by-country")
+		stats := make([]map[string]interface{}, 0)
+		if err := db.Raw("SELECT country, country_code, count(*) AS count FROM attacks GROUP BY country,country_code ORDER BY count DESC").Scan(&stats).Error; err != nil {
+			log.Printf("failed to get attack stats: %v", err)
+			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+		}
+		return c.JSON(stats)
 	})
 
 	app.Get("/api/attacks/ws", websocket.New(func(c *websocket.Conn) {

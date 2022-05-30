@@ -1,6 +1,7 @@
 <script lang="ts">
   import { fetchAPI, WebSocketAPI } from "./api";
   import Badge from "./Badge.svelte";
+  import CheckboxList from "./CheckboxList.svelte";
 
   import Error from "./Error.svelte";
 
@@ -20,6 +21,7 @@
     isp: string;
     contents: string;
     duration: number;
+    classification: string;
   }
 
   let propertyLabels = {
@@ -32,12 +34,25 @@
     countryCode: "Country code",
     location: "Location",
     duration: "Duration",
+    classification: "classification",
   };
+
   let propertyTypes = {
     CreatedAt: "date",
     duration: "ms",
   };
 
+  let classificationOptions = [
+    { value: "empty" },
+    { value: "username_entered" },
+    { value: "authenticated" },
+    { value: "command_entered" },
+  ];
+  let classifications = [
+    "username_entered",
+    "authenticated",
+    "command_entered",
+  ];
   function formatDate(d: string) {
     return new Date(d).toLocaleString();
   }
@@ -67,11 +82,19 @@
   let attacks: IAttack[] = [];
   let loadingPromise: Promise<any> | null = null;
   function loadMoreAttacks() {
-    loadingPromise = fetchAPI("GET", "/api/attacks").then((data) => {
+    loadingPromise = fetchAPI("GET", "/api/attacks", undefined, {
+      classifications,
+    }).then((data) => {
       attacks = attacks.concat(data);
     });
   }
   loadMoreAttacks();
+
+  function classificationsChanged(c: string[]) {
+    classifications = c;
+    attacks = [];
+    loadMoreAttacks();
+  }
 
   let attacksWebSocket: WebSocket = WebSocketAPI("/api/attacks/ws");
   attacksWebSocket.onmessage = (e) => {
@@ -85,11 +108,22 @@
     }
     // sort by ids in descending order
     attacks.sort((a, b) => b.ID - a.ID);
+    attacks = attacks.filter((a) => {
+      if (a.inProgress) {
+        return true;
+      }
+      return classifications.includes(a.classification);
+    });
   };
 </script>
 
 <div>
   Connections:
+  <CheckboxList
+    options={classificationOptions}
+    value={classifications}
+    onInput={classificationsChanged}
+  />
   {#each attacks as attack}
     <div class="attack">
       {#if attack.inProgress}

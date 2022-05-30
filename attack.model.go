@@ -10,15 +10,16 @@ import (
 
 type Attack struct {
 	gorm.Model
-	Protocol    string `json:"protocol"`
-	InProgress  bool   `json:"inProgress"`
-	SourceIP    string `json:"sourceIP"`
-	Country     string `json:"country"`
-	CountryCode string `json:"countryCode"`
-	Location    string `json:"location"`
-	ISP         string `json:"isp"`
-	Contents    string `json:"contents"`
-	Duration    int    `json:"duration"` // milliseconds
+	Protocol       string `json:"protocol"`
+	InProgress     bool   `json:"inProgress"`
+	SourceIP       string `json:"sourceIP"`
+	Country        string `json:"country"`
+	CountryCode    string `json:"countryCode"`
+	Location       string `json:"location"`
+	ISP            string `json:"isp"`
+	Contents       string `json:"contents"`
+	Duration       int    `json:"duration"` // milliseconds
+	Classification string `json:"classification"`
 }
 
 var currentAttacks = make(map[uint]*Attack)
