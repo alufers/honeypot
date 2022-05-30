@@ -32,6 +32,9 @@ func createRunner(stdin io.Reader, stdout io.Writer) *interp.Runner {
 		interp.OpenHandler(func(ctx context.Context, path string, flag int, perm os.FileMode) (io.ReadWriteCloser, error) {
 			return nil, nil
 		}),
+		interp.StatHandler(func(ctx context.Context, name string, followSymlinks bool) (os.FileInfo, error) {
+			return os.Stat("/")
+		}),
 		interp.StdIO(stdin, stdout, stdout),
 		interp.Dir("/root"),
 		interp.Env(expand.Environ(expand.ListEnviron(
