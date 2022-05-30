@@ -7,6 +7,12 @@ if (window.location.hostname !== "localhost") {
   }
 }
 
+// parse the location query
+const query = new URLSearchParams(window.location.search);
+if(query.has("api")) {
+  API_URL = query.get("api");
+}
+
 export async function fetchAPI(
   method: string,
   url: string,

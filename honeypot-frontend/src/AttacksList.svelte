@@ -177,7 +177,7 @@
         .property {
           margin-bottom: 0.8rem;
           label {
-            color: #00b894;
+            color: var(--primary);
             font-size: 0.8rem;
           }
         }
