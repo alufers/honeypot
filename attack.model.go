@@ -22,6 +22,14 @@ type Attack struct {
 	Classification string `json:"classification"`
 }
 
+func (a *Attack) Write(data []byte) (int, error) {
+	a.Contents += string(data)
+	if err := AttackUpdated(a); err != nil {
+		panic(err)
+	}
+	return len(data), nil
+}
+
 var currentAttacks = make(map[uint]*Attack)
 var currentAttacksMutex = &sync.Mutex{}
 
