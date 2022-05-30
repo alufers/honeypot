@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"regexp"
 	"strings"
 	"time"
 )
@@ -69,6 +68,7 @@ func handleTelnetConnection(conn net.Conn) {
 	write := func(message string) {
 		conn.Write([]byte(message))
 		attack.Contents += message
+		timeoutTimer.Reset(afterFirstLineTimeout)
 		if err := AttackUpdated(attack); err != nil {
 			panic(err)
 		}
@@ -105,46 +105,14 @@ func handleTelnetConnection(conn net.Conn) {
 	if err := db.Create(credUsage).Error; err != nil {
 		panic(err)
 	}
-	for {
-		write("# ")
-		line, err := reader.ReadString('\n')
-		if err != nil {
-			panic(err)
-		}
-		timeoutTimer.Reset(afterFirstLineTimeout)
-
-		attack.Contents += line
-		attack.Classification = "command_entered"
-		if len(line) > maxContents {
-			attack.Contents = attack.Contents[:maxContents]
-			break
-		}
-		if err := AttackUpdated(attack); err != nil {
-			panic(err)
-		}
-
-		r := regexp.MustCompile("cat /proc/mounts; /bin/busybox ([A-Za-z0-9]+)")
-		submatches := r.FindStringSubmatch(line)
-		if len(submatches) > 0 {
-			attack.Classification = "command_executed"
-			write(fmt.Sprintf(`/dev/root /rom squashfs ro,relatime 0 0
-proc /proc proc rw,nosuid,nodev,noexec,noatime 0 0
-sysfs /sys sysfs rw,nosuid,nodev,noexec,noatime 0 0
-cgroup2 /sys/fs/cgroup cgroup2 rw,nosuid,nodev,noexec,relatime,nsdelegate 0 0
-tmpfs /tmp tmpfs rw,nosuid,nodev,noatime 0 0
-/dev/mtdblock6 /overlay jffs2 rw,noatime 0 0
-overlayfs:/overlay / overlay rw,noatime,lowerdir=/,upperdir=/overlay/upper,workdir=/overlay/work 0 0
-tmpfs /dev tmpfs rw,nosuid,relatime,size=512k,mode=755 0 0
-devpts /dev/pts devpts rw,nosuid,noexec,relatime,mode=600,ptmxmode=000 0 0
-debugfs /sys/kernel/debug debugfs rw,noatime 0 0
-none /sys/fs/bpf bpf rw,nosuid,nodev,noexec,noatime,mode=700 0 0
-%v: applet not found
-`, submatches[1]))
-			continue
-		} else {
-			write("OK\r\n")
-		}
-
+	timeoutTimer.Reset(afterFirstLineTimeout)
+	err = ServiceConn(
+		attack,
+		*reader,
+		write,
+	)
+	if err != nil {
+		panic(err)
 	}
 
 }
