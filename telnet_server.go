@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -42,7 +43,8 @@ func handleTelnetConnection(conn net.Conn) {
 	// recover from panic
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Println("Recovered in handleTelnetConnection", r)
+			log.Println("Recovered in handleTelnetConnection", r)
+			log.Println("stacktrace from panic: \n" + string(debug.Stack()))
 		}
 	}()
 
