@@ -73,9 +73,19 @@ func RunAdminServer() {
 	})
 
 	app.Get("/api/attacks/stats/by-country", func(c *fiber.Ctx) error {
-		log.Printf("debug: /api/attacks/stats/by-country")
+
 		stats := make([]map[string]interface{}, 0)
 		if err := db.Raw("SELECT country, country_code, count(*) AS count FROM attacks GROUP BY country,country_code ORDER BY count DESC").Scan(&stats).Error; err != nil {
+			log.Printf("failed to get attack stats: %v", err)
+			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+		}
+		return c.JSON(stats)
+	})
+
+	app.Get("/api/credentials/stats/passwords", func(c *fiber.Ctx) error {
+
+		stats := make([]map[string]interface{}, 0)
+		if err := db.Raw("SELECT password, count(*) AS count, 100.0 * COUNT(*) / (SELECT COUNT(*) FROM credential_usages) AS percentage FROM credential_usages GROUP BY password ORDER BY count DESC LIMIT 20;").Scan(&stats).Error; err != nil {
 			log.Printf("failed to get attack stats: %v", err)
 			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 		}

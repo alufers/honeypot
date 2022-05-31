@@ -169,6 +169,9 @@
     .columns {
       display: flex;
       flex-direction: row;
+      @media (max-width: 900px) {
+        flex-direction: column;
+      }
       .properties {
         padding-top: 16px;
         flex: 1;

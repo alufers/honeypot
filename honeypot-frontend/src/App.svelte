@@ -1,6 +1,7 @@
 <script lang="ts">
   import AttacksList from "./AttacksList.svelte";
   import CountriesTopList from "./CountriesTopList.svelte";
+  import PasswordsTopList from "./PasswordsTopList.svelte";
   import ProtocolList from "./ProtocolList.svelte";
 
   export let appVersion: string = process.env.HONEYPOT_VERSION;
@@ -15,6 +16,9 @@
     </div>
     <div>
       <CountriesTopList />
+    </div>
+    <div>
+      <PasswordsTopList />
     </div>
   </div>
   <AttacksList />
@@ -39,6 +43,12 @@
     flex-direction: row;
     > div {
       flex-grow: 1;
+    }
+    @media (max-width: 900px) {
+      flex-direction: column;
+      &> div {
+        margin-bottom: 1rem;
+      }
     }
   }
 </style>
