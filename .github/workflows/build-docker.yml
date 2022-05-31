@@ -39,5 +39,7 @@ jobs:
           context: .
           push: true
           platforms: linux/amd64
+          build-args:
+            HONEYPOT_VERSION: ${{ github.ref }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

@@ -124,6 +124,10 @@ func makeFS() map[string]interface{} {
 			if len(args) > 1 {
 				applet = args[1]
 			}
+			if applet == "echo" {
+				fmt.Fprintf(conn, "%v\n", strings.Join(args[2:], " "))
+				return nil
+			}
 			fmt.Fprintf(conn, "%v: applet not found\n", applet)
 			return interp.NewExitStatus(5)
 		}),

@@ -7,6 +7,7 @@ import sveltePreprocess from "svelte-preprocess";
 import typescript from "@rollup/plugin-typescript";
 import css from "rollup-plugin-css-only";
 import copy from "rollup-plugin-copy";
+import replace from "@rollup/plugin-replace";
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -44,6 +45,15 @@ export default {
     file: "public/build/bundle.js",
   },
   plugins: [
+    replace({
+      include: ["src/**/*.ts", "src/**/*.svelte"],
+      preventAssignment: true,
+      values: {
+        "process.env.HONEYPOT_VERSION": JSON.stringify(
+          process.env.HONEYPOT_VERSION || "dev"
+        ),
+      },
+    }),
     svelte({
       preprocess: sveltePreprocess({ sourceMap: !production }),
       compilerOptions: {

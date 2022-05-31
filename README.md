@@ -13,3 +13,11 @@ With default values
 - `TELNET_PORT=23`
 - `IP2LOCATION_DB=IP2LOCATION-LITE-DB11.IPV6.BIN`
 - `SHELL_PROVIDER_KEY=devkey`
+
+## Building
+
+To build the docker container
+
+```sh
+$ docker buildx build --platform linux/amd64 .
+```

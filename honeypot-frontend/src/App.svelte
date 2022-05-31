@@ -3,11 +3,12 @@
   import CountriesTopList from "./CountriesTopList.svelte";
   import ProtocolList from "./ProtocolList.svelte";
 
-  export let name: string;
+  export let appVersion: string = process.env.HONEYPOT_VERSION;
 </script>
 
 <main>
   <h1>Honeypot</h1>
+  <div class="version">version: {appVersion}</div>
   <div class="stats-columns">
     <div>
       <ProtocolList />
@@ -20,6 +21,14 @@
 </main>
 
 <style lang="scss">
+  .version {
+    font-size: 0.8em;
+    color: #999;
+    margin-bottom: 1.5rem;
+  }
+  h1 {
+    margin-block-end: 0;
+  }
   main {
     padding: 1em;
     max-width: 1200px;
