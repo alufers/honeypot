@@ -15,7 +15,7 @@ type combinedReadWriter struct {
 }
 
 func createRunner(stdin io.Reader, stdout io.Writer) *interp.Runner {
-
+	os.MkdirAll("/root", 0755)
 	fs := makeFS()
 	comb := combinedReadWriter{
 		Writer: stdout,
