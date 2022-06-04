@@ -15,7 +15,7 @@ var busyboxSymlinks = []string{
 	"/bin/syslogd", "/bin/tail", "/bin/tar", "/bin/tftp", "/bin/top", "/bin/true",
 	"/bin/udhcpc", "/bin/udhcpc.script", "/bin/umount", "/bin/uncompress",
 	"/bin/unlzma", "/bin/unzip", "/bin/uptime", "/bin/vconfig", "/bin/vi",
-	"/bin/wc", "/bin/xargs", "/bin/zcat"}
+	"/bin/wc", "/bin/xargs", "/bin/zcat", "/bin/id"}
 
 var busyboxHeader = "BusyBox v1.13.4 (2020-04-28 13:57:36 CST) multi-call binary"
 
@@ -35,7 +35,7 @@ Usage: busybox [function] [arguments]...
 Currently defined functions:
 	adduser, ar, ash, awk, bunzip2, bzcat, bzip2, cat, chmod, chpasswd,
 	cp, cpio, cut, date, dd, df, dirname, dmesg, dpkg, dpkg-deb, echo,
-	expr, false, free, grep, gunzip, gzip, halt, head, hostname, ifconfig,
+	expr, false, free, grep, gunzip, gzip, halt, head, hostname, id, ifconfig,
 	init, ip, kill, killall, klogd, ln, login, ls, lzmacat, md5sum,
 	mkdir, mknod, mount, mv, passwd, pgrep, ping, poweroff, ps, pwd,
 	reboot, renice, rm, route, rpm, rpm2cpio, sed, sh, sleep, stty,

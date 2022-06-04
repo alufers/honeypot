@@ -16,7 +16,7 @@ type combinedReadWriter struct {
 	io.Writer
 }
 
-func createRunner(stdin io.Reader, stdout io.Writer) *interp.Runner {
+func createRunner(stdin io.Reader, stdout io.Writer, fs vfs.Filesystem) *interp.Runner {
 	os.MkdirAll("/root", 0755)
 
 	runner, err := interp.New(
@@ -30,10 +30,10 @@ func createRunner(stdin io.Reader, stdout io.Writer) *interp.Runner {
 			log.Printf("open: %s %d %d", path, flag, perm)
 			c := UnwrapCtx(ctx)
 
-			return MapError(ctx.Value("FS").(vfs.Filesystem).OpenFile(c.Abs(path), flag, perm))
+			return MapError(fs.(vfs.Filesystem).OpenFile(c.Abs(path), flag, perm))
 		}),
 		interp.StatHandler(func(ctx context.Context, name string, followSymlinks bool) (os.FileInfo, error) {
-			info, err := MapError(ctx.Value("FS").(vfs.Filesystem).Stat(name))
+			info, err := MapError(fs.(vfs.Filesystem).Stat(name))
 			if err != nil {
 				return nil, err
 			}
@@ -41,7 +41,7 @@ func createRunner(stdin io.Reader, stdout io.Writer) *interp.Runner {
 		}),
 		interp.ReadDirHandler(func(ctx context.Context, path string) ([]os.FileInfo, error) {
 			log.Printf("Read dir ctx: %#v", ctx)
-			info, err := MapError(ctx.Value("FS").(vfs.Filesystem).ReadDir(path))
+			info, err := MapError(fs.(vfs.Filesystem).ReadDir(path))
 			if err != nil {
 				return nil, err
 			}

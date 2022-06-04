@@ -390,6 +390,26 @@ func init() {
 
 			return
 		},
+		"id": func(ctx context.Context, args []string) (erro error) {
+			c := UnwrapCtx(ctx)
+			log.Printf("busybox: id args: %#v", args)
+			if len(args) < 1 {
+				c.Printf("uid=0(root) gid=0(root)\n")
+				return
+			}
+			argsParsed, _ := ParseBeginningShortFlags(args)
+			_, name := argsParsed["n"]
+			_, showGroups := argsParsed["g"]
+			_, showUser := argsParsed["u"]
+			if showGroups || showUser {
+				if name {
+					c.Printf("root\n")
+				} else {
+					c.Printf("0\n")
+				}
+			}
+			return
+		},
 	}
 
 }

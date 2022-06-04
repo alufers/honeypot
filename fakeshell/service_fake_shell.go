@@ -7,15 +7,16 @@ import (
 	"io"
 	"strings"
 
+	"github.com/blang/vfs"
 	"mvdan.cc/sh/v3/syntax"
 )
 
 func ServiceFakeshell(input io.Reader, output io.Writer) error {
 	reader := bufio.NewReader(input)
 	writer := bufio.NewWriter(output)
-	runner := createRunner(reader, writer)
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, "FS", MakeFS())
+	runner := createRunner(reader, writer, ctx.Value("FS").(vfs.Filesystem))
 	for {
 		writer.WriteString("# ")
 		writer.Flush()
