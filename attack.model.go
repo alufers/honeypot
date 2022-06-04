@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bufio"
+	"io"
 	"log"
 	"sync"
 	"time"
@@ -84,4 +86,21 @@ func AttackFinished(attack *Attack) error {
 	delete(currentAttacks, attack.ID)
 	attacksEventBroadcaster.Broadcast(attack)
 	return nil
+}
+
+func WrapConnReaderWriter(a *Attack, reader io.Reader, writer io.Writer, lineCallback func(string)) (io.Reader, io.Writer) {
+	cbR, cbW := io.Pipe()
+	go func() {
+		scanner := bufio.NewScanner(cbR)
+		for scanner.Scan() {
+			line := scanner.Text()
+			if lineCallback != nil {
+				lineCallback(line)
+			}
+		}
+		if err := scanner.Err(); err != nil {
+			log.Printf("error reading from connection: %v", err)
+		}
+	}()
+	return io.TeeReader(reader, io.MultiWriter(cbW, a)), io.MultiWriter(writer, a)
 }

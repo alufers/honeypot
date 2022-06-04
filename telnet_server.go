@@ -114,7 +114,14 @@ func handleTelnetConnection(conn net.Conn) {
 	// stdout := io.MultiWriter(conn, attackBuf)
 	// stdin := io.TeeReader(conn, attackBuf)
 	// runner := createRunner(stdin, stdout)
-	if err := fakeshell.ServiceFakeshell(conn, conn); err != nil {
+	if err := fakeshell.ServiceFakeshell(WrapConnReaderWriter(attack, conn, conn, func(line string) {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			return
+		}
+		timeoutTimer.Reset(afterFirstLineTimeout)
+		attack.Classification = "command_entered"
+	})); err != nil {
 		panic(err)
 	}
 

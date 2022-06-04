@@ -62,7 +62,7 @@ func ParseFileSize(rawSize string) (int64, error) {
 	}
 
 	parsed, err := strconv.ParseInt(rawSize, 10, 64)
-	if err != nil {
+	if err != nil || parsed < 0 {
 		return 0, fmt.Errorf("invalid number '%s'", rawSize)
 	}
 	return parsed * multiplier, nil

@@ -2,8 +2,10 @@ package fakeshell
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -46,6 +48,14 @@ func (ctx *BetterCtx) Abs(p string) string {
 
 func (ctx *BetterCtx) Copy(dst io.Writer, src io.Reader) (written int64, err error) {
 	return io.Copy(dst, src)
+}
+
+func (ctx *BetterCtx) CopyN(dst io.Writer, src io.Reader, n int64) (written int64, err error) {
+	return io.CopyN(dst, src, n)
+}
+
+func (ctx *BetterCtx) OpenFile(name string, flag int, perm os.FileMode) (vfs.File, error) {
+	return MapError(ctx.FS.OpenFile(name, flag, perm))
 }
 
 var fakeshellBinaries map[string]FakeBinary = nil
@@ -177,7 +187,7 @@ func init() {
 					erro = interp.NewExitStatus(1)
 					continue
 				}
-				file, err := c.FS.OpenFile(fullPath, os.O_RDONLY, 0)
+				file, err := c.OpenFile(fullPath, os.O_RDONLY, 0)
 				if err != nil {
 					c.Printfe("cat: can't open '%s': %s\n", fullPath, err.Error())
 					erro = interp.NewExitStatus(1)
@@ -205,14 +215,14 @@ func init() {
 				if info, err := c.FS.Stat(dst); err == nil && info.IsDir() {
 					dst = c.Abs(filepath.Join(dst, filepath.Base(src)))
 				}
-				srcFile, err := c.FS.OpenFile(src, os.O_RDONLY, 0)
+				srcFile, err := c.OpenFile(src, os.O_RDONLY, 0)
 				if err != nil {
 					c.Printfe("cp: %s: %s\n", src, err.Error())
 					erro = interp.NewExitStatus(1)
 					continue
 				}
 				defer srcFile.Close()
-				dstFile, err := c.FS.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0)
+				dstFile, err := c.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0)
 				if err != nil {
 					c.Printfe("cp: %s: %s\n", dst, err.Error())
 					erro = interp.NewExitStatus(1)
@@ -220,7 +230,7 @@ func init() {
 				}
 				defer dstFile.Close()
 
-				if _, err := c.Copy(srcFile, dstFile); err != nil {
+				if _, err := c.Copy(dstFile, srcFile); err != nil {
 					c.Printfe("cp: %s: %s\n", src, err.Error())
 					erro = interp.NewExitStatus(1)
 					continue
@@ -287,7 +297,12 @@ func init() {
 		},
 		"dd": func(ctx context.Context, args []string) (erro error) {
 			c := UnwrapCtx(ctx)
-			flags, bad := ParseFlagsDDStyle(args[1:])
+			if len(args) < 1 {
+				c.Printfe("%s\n", busyboxHelps["dd"])
+				erro = interp.NewExitStatus(1)
+				return
+			}
+			flags, bad := ParseFlagsDDStyle(args)
 			if bad {
 				c.Printfe(busyboxHelps["dd"])
 				erro = interp.NewExitStatus(1)
@@ -295,9 +310,10 @@ func init() {
 			}
 			var input io.Reader = c.Stdin
 			var output io.Writer = c.Stdout
+			var outputFile vfs.File
 			if val, ok := flags["if"]; ok {
 
-				i, err := c.FS.OpenFile(c.Abs(val), os.O_RDONLY, 0)
+				i, err := c.OpenFile(c.Abs(val), os.O_RDONLY, 0)
 				if err != nil {
 					c.Printfe("dd: can't open '%s': %s\n", val, err.Error())
 					erro = interp.NewExitStatus(1)
@@ -307,7 +323,7 @@ func init() {
 				input = i
 			}
 			if val, ok := flags["of"]; ok {
-				o, err := c.FS.OpenFile(c.Abs(val), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0)
+				o, err := c.OpenFile(c.Abs(val), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0)
 				if err != nil {
 					c.Printfe("dd: can't open '%s': %s\n", val, err.Error())
 					erro = interp.NewExitStatus(1)
@@ -315,10 +331,62 @@ func init() {
 				}
 				defer o.Close()
 				output = o
+				outputFile = o
 			}
-			var blockSize int64 = 512
-			if val, ok := flags["bs"]; ok {
-				blockSize, err 
+			numericFlags := map[string]int64{
+				"bs":    512,
+				"count": -1,
+				"skip":  0,
+				"seek":  0,
+			}
+			for k := range numericFlags {
+				if val, ok := flags[k]; ok {
+					if val, err := ParseFileSize(val); err != nil {
+						c.Printfe("dd: %s\n", err.Error())
+						erro = interp.NewExitStatus(1)
+						return
+					} else {
+						numericFlags[k] = val
+					}
+				}
+			}
+			log.Printf("busybox: dd flags: %#v", flags)
+			log.Printf("busybox: dd numericFlags: %#v", numericFlags)
+			// log.Printf("busybox: dd input: %#v", input)
+			// log.Printf("busybox: dd output: %#v", output)
+			var bs, count, skip, seek = numericFlags["bs"], numericFlags["count"], numericFlags["skip"], numericFlags["seek"]
+
+			if skip > 0 {
+				if _, err := io.CopyN(ioutil.Discard, input, skip); err != nil {
+					c.Printfe("dd: %s\n", err.Error())
+					erro = interp.NewExitStatus(1)
+				}
+			}
+
+			if seek > 0 {
+				if outputFile != nil {
+					if _, err := outputFile.Seek(seek, io.SeekStart); err != nil {
+						c.Printfe("dd: %s\n", err.Error())
+						erro = interp.NewExitStatus(1)
+						return
+					}
+				}
+			}
+
+			for count > 0 || count == -1 {
+				log.Printf("Copying %v bytes", bs)
+				_, err := c.CopyN(output, input, bs)
+				if errors.Is(err, io.EOF) {
+					break
+				}
+				if err != nil {
+					c.Printfe("dd: %s\n", err.Error())
+					erro = interp.NewExitStatus(1)
+					return
+				}
+				count--
+			}
+			c.Printfe("\n")
 
 			return
 		},

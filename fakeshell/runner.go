@@ -30,10 +30,10 @@ func createRunner(stdin io.Reader, stdout io.Writer) *interp.Runner {
 			log.Printf("open: %s %d %d", path, flag, perm)
 			c := UnwrapCtx(ctx)
 
-			return ctx.Value("FS").(vfs.Filesystem).OpenFile(c.Abs(path), flag, perm)
+			return MapError(ctx.Value("FS").(vfs.Filesystem).OpenFile(c.Abs(path), flag, perm))
 		}),
 		interp.StatHandler(func(ctx context.Context, name string, followSymlinks bool) (os.FileInfo, error) {
-			info, err := ctx.Value("FS").(vfs.Filesystem).Stat(name)
+			info, err := MapError(ctx.Value("FS").(vfs.Filesystem).Stat(name))
 			if err != nil {
 				return nil, err
 			}
@@ -41,7 +41,7 @@ func createRunner(stdin io.Reader, stdout io.Writer) *interp.Runner {
 		}),
 		interp.ReadDirHandler(func(ctx context.Context, path string) ([]os.FileInfo, error) {
 			log.Printf("Read dir ctx: %#v", ctx)
-			info, err := ctx.Value("FS").(vfs.Filesystem).ReadDir(path)
+			info, err := MapError(ctx.Value("FS").(vfs.Filesystem).ReadDir(path))
 			if err != nil {
 				return nil, err
 			}
