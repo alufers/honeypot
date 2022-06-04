@@ -2,16 +2,14 @@ package main
 
 import (
 	"bufio"
-	"context"
 	"fmt"
-	"io"
 	"log"
 	"net"
 	"runtime/debug"
 	"strings"
 	"time"
 
-	"mvdan.cc/sh/v3/syntax"
+	"github.com/alufers/honeypot/fakeshell"
 )
 
 const initialTimeout = time.Second * 15
@@ -112,39 +110,12 @@ func handleTelnetConnection(conn net.Conn) {
 		panic(err)
 	}
 	timeoutTimer.Reset(afterFirstLineTimeout)
-	attackBuf := bufio.NewWriter(attack)
-	stdout := io.MultiWriter(conn, attackBuf)
-	stdin := io.TeeReader(conn, attackBuf)
-	runner := createRunner(stdin, stdout)
-	for {
-		write("# ")
-		line, err := reader.ReadString('\n')
-		if err != nil {
-			panic(err)
-		}
-		timeoutTimer.Reset(afterFirstLineTimeout)
-		attack.Contents += line
-		attack.Classification = "command_entered"
-		if err := AttackUpdated(attack); err != nil {
-			panic(err)
-		}
-		if len(line) > maxContents {
-			attack.Contents = attack.Contents[:maxContents]
-			break
-		}
-		file, err := syntax.NewParser().Parse(strings.NewReader(string(line)), "")
-		if err != nil {
-			log.Printf("Error parsing command: %v", err)
-			write("Error parsing command: " + err.Error() + "\r\n")
-		}
-		if file != nil {
-			err := runner.Run(context.Background(), file)
-			if err != nil {
-				log.Printf("Runner failed with error: %v", err)
-			}
-		}
-		attackBuf.Flush()
-
+	// attackBuf := bufio.NewWriter(attack)
+	// stdout := io.MultiWriter(conn, attackBuf)
+	// stdin := io.TeeReader(conn, attackBuf)
+	// runner := createRunner(stdin, stdout)
+	if err := fakeshell.ServiceFakeshell(conn, conn); err != nil {
+		panic(err)
 	}
 
 }

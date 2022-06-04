@@ -3,7 +3,7 @@ module github.com/alufers/honeypot
 go 1.18
 
 require (
-	github.com/fasthttp/websocket v1.5.0
+	github.com/blang/vfs v1.0.0
 	github.com/gofiber/fiber/v2 v2.34.0
 	github.com/gofiber/websocket/v2 v2.0.22
 	github.com/ip2location/ip2location-go/v9 v9.2.0
@@ -14,6 +14,7 @@ require (
 
 require (
 	github.com/andybalholm/brotli v1.0.4 // indirect
+	github.com/fasthttp/websocket v1.5.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/klauspost/compress v1.15.0 // indirect
@@ -26,3 +27,5 @@ require (
 	golang.org/x/sys v0.0.0-20220227234510-4e6760a101f9 // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 )
+
+replace github.com/blang/vfs => github.com/dsharp-pivotal/vfs v0.0.0-20180917171731-4c8d59de28be

@@ -110,35 +110,5 @@ func RunAdminServer() {
 		}
 	}))
 
-	app.Get("/api/shell-provider/ws", websocket.New(func(c *websocket.Conn) {
-		key := c.Query("key")
-		kind := c.Query("kind")
-		hostname := c.Query("hostname")
-		if key == "" || kind == "" || hostname == "" {
-			log.Printf("missing key, kind or hostname")
-			c.WriteJSON(fiber.Map{"error": "missing key, kind or hostname"})
-			c.Close()
-			return
-		}
-		if key != getEnv("SHELL_PROVIDER_KEY", "devkey") {
-			log.Printf("invalid key")
-			c.WriteJSON(fiber.Map{"error": "invalid key"})
-			c.Close()
-			return
-		}
-		log.Printf("debug: new shell provider connection: %s %s %s", key, kind, hostname)
-		sp := &ShellProvider{
-			Kind:         kind,
-			Hostname:     hostname,
-			Conn:         *c,
-			notifyClosed: make(chan bool),
-		}
-		shellProvidersMutex.Lock()
-		shellProviders = append(shellProviders, sp)
-		shellProvidersMutex.Unlock()
-		<-sp.notifyClosed
-
-	}))
-
 	log.Fatal(app.Listen(getEnv("ADMIN_ADDR", "localhost:7878")))
 }
