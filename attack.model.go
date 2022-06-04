@@ -97,10 +97,19 @@ func WrapConnReaderWriter(a *Attack, reader io.Reader, writer io.Writer, lineCal
 			if lineCallback != nil {
 				lineCallback(line)
 			}
+			a.Write([]byte(line + "\n"))
 		}
 		if err := scanner.Err(); err != nil {
 			log.Printf("error reading from connection: %v", err)
 		}
 	}()
-	return io.TeeReader(reader, io.MultiWriter(cbW, a)), io.MultiWriter(writer, a)
+	outputR, outputW := io.Pipe()
+	go func() {
+		scanner := bufio.NewScanner(outputR)
+		for scanner.Scan() {
+			line := scanner.Text()
+			a.Write([]byte(line + "\n"))
+		}
+	}()
+	return io.TeeReader(reader, cbW), io.MultiWriter(writer, outputW)
 }
