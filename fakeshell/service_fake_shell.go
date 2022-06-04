@@ -11,6 +11,7 @@ import (
 	"mvdan.cc/sh/v3/syntax"
 )
 
+//ServiceFakeshell runs the fake shell on the given reader and writer
 func ServiceFakeshell(input io.Reader, output io.Writer) error {
 	reader := bufio.NewReader(input)
 	writer := bufio.NewWriter(output)
@@ -30,6 +31,8 @@ func ServiceFakeshell(input io.Reader, output io.Writer) error {
 		file, err := syntax.NewParser().Parse(strings.NewReader(string(line)), "")
 		if err != nil {
 			writer.WriteString("-ash: syntax error: " + err.Error() + "\r\n")
+			writer.Flush()
+			continue
 		}
 		runner.Run(ctx, file)
 		writer.Flush()

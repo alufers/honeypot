@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-//FileInfoWrapper is a wrapper for os.FileInfo, which adds a fake Sys return value
+//FileInfoWrapper is a wrapper for os.FileInfo, which adds a fake Sys return value so that sh doesn't panic
 type FileInfoWrapper struct {
 	wrapped os.FileInfo
 }
@@ -14,13 +14,6 @@ type FileInfoWrapper struct {
 func NewFileInfoWrapper(wrapped os.FileInfo) *FileInfoWrapper {
 	return &FileInfoWrapper{wrapped: wrapped}
 }
-
-// Name() string
-// Size() int64
-// Mode() FileMode
-// ModTime() time.Time
-// IsDir() bool
-// Sys() any
 
 func (f *FileInfoWrapper) Name() string {
 	return f.wrapped.Name()

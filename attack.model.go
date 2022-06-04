@@ -88,6 +88,7 @@ func AttackFinished(attack *Attack) error {
 	return nil
 }
 
+//WrapConnReaderWriter wraps a reader and a wirter, and extracts the data to be saved in the database
 func WrapConnReaderWriter(a *Attack, reader io.Reader, writer io.Writer, lineCallback func(string)) (io.Reader, io.Writer) {
 	cbR, cbW := io.Pipe()
 	go func() {

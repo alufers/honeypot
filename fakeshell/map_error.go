@@ -11,6 +11,7 @@ var errorMappings = map[error]string{
 	os.ErrPermission: "Permission denied",
 }
 
+//MapError changes errors to look like UNIX errors
 func MapError[R any](v R, err error) (R, error) {
 	if err != nil {
 		for k, msg := range errorMappings {
