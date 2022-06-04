@@ -71,5 +71,6 @@ func main() {
 	migrateClassifications()
 	db.Model(&Attack{}).Where("1=1").Update("in_progress", false)
 	go RunTelnetServer()
+	go RunSSHServer()
 	RunAdminServer()
 }
