@@ -48,4 +48,4 @@ jobs:
         id: run
         run: |
           echo "Hello World"
-          curl --insecure -v -H "Authorization: Bearer {{ secrets.WATCHTOWER_TOKEN }}" {{ secrets.WATCHTOWER_URL }}
+          curl --insecure -v -H "Authorization: Bearer ${{ secrets.WATCHTOWER_TOKEN }}" ${{ secrets.WATCHTOWER_URL }}
