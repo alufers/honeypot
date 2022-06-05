@@ -48,6 +48,8 @@
     { value: "authenticated" },
     { value: "command_entered" },
   ];
+  let protocolsOptions = [{ value: "telnet" }, { value: "ssh" }];
+  let protocols = ["telnet", "ssh"];
   let classifications = [
     "username_entered",
     "authenticated",
@@ -84,6 +86,7 @@
   function loadMoreAttacks() {
     loadingPromise = fetchAPI("GET", "/api/attacks", undefined, {
       classifications,
+      protocols,
     }).then((data) => {
       attacks = attacks.concat(data);
     });
@@ -92,6 +95,12 @@
 
   function classificationsChanged(c: string[]) {
     classifications = c;
+    attacks = [];
+    loadMoreAttacks();
+  }
+
+  function protocolsChanged(p: string[]) {
+    protocols = p;
     attacks = [];
     loadMoreAttacks();
   }
@@ -112,17 +121,23 @@
       if (a.inProgress) {
         return true;
       }
-      return classifications.includes(a.classification);
+      return classifications.includes(a.classification) && protocols.includes(a.protocol);
     });
   };
 </script>
 
 <div>
-  Connections:
+  Classification:
   <CheckboxList
     options={classificationOptions}
     value={classifications}
     onInput={classificationsChanged}
+  />
+  Protocols:
+  <CheckboxList
+    options={protocolsOptions}
+    value={protocols}
+    onInput={protocolsChanged}
   />
   {#each attacks as attack}
     <div class="attack">
