@@ -2,13 +2,22 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"math/rand"
+	"runtime/debug"
 	"strings"
+	"time"
 
 	"github.com/alufers/honeypot/fakeshell"
 	"github.com/gliderlabs/ssh"
+	"golang.org/x/term"
 )
+
+type combinedReadWriter struct {
+	io.Reader
+	io.Writer
+}
 
 func RunSSHServer() {
 	sshPort := fmt.Sprintf(":%s", getEnv("HONEYPOT_SSH_PORT", "2222"))
@@ -19,6 +28,21 @@ func RunSSHServer() {
 	listeningProtocolsMutex.Unlock()
 
 	ssh.Handle(func(s ssh.Session) {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Println("Recovered in ssh.Handle", r)
+				log.Println("stacktrace from panic: \n" + string(debug.Stack()))
+			}
+		}()
+
+		timeoutTimer := time.NewTimer(initialTimeout)
+
+		go func() {
+			<-timeoutTimer.C
+			s.Exit(1)
+			s.Close()
+		}()
+
 		_, _, isPty := s.Pty()
 		if isPty {
 			attack := &Attack{
@@ -31,15 +55,16 @@ func RunSSHServer() {
 				panic(err)
 			}
 			defer AttackFinished(attack)
+			term := term.NewTerminal(s, "# ")
 
-			if err := fakeshell.ServiceFakeshell(WrapConnReaderWriter(attack, s, s, func(line string) {
+			if err := fakeshell.ServiceFakeShellOnTerminal(term, s, attack, func(line string) {
 				line = strings.TrimSpace(line)
 				if line == "" {
 					return
 				}
-				// timeoutTimer.Reset(afterFirstLineTimeout)
+				timeoutTimer.Reset(afterFirstLineTimeout)
 				attack.Classification = "command_entered"
-			})); err != nil {
+			}); err != nil {
 				panic(err)
 			}
 		} else {
