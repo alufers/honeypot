@@ -24,7 +24,7 @@ func RunSSHServer() {
 	log.Printf("Starting ssh server on %v", sshPort)
 
 	listeningProtocolsMutex.Lock()
-	listeningProtocols = append(listeningProtocols, "ssh`")
+	listeningProtocols = append(listeningProtocols, "ssh")
 	listeningProtocolsMutex.Unlock()
 
 	ssh.Handle(func(s ssh.Session) {

@@ -38,6 +38,7 @@ func RunAdminServer() {
 			Count           string   `query:"count"`
 			Before          string   `query:"before"`
 			Classifications []string `query:"classifications"`
+			Protocols       []string `query:"protocols"`
 		}{}
 		if err := c.QueryParser(&query); err != nil {
 			return err
@@ -55,6 +56,9 @@ func RunAdminServer() {
 		dbQuery := db.Where("id < ?", before)
 		if query.Classifications != nil && len(query.Classifications) > 0 {
 			dbQuery = dbQuery.Where("classification IN (?)", query.Classifications)
+		}
+		if query.Protocols != nil && len(query.Protocols) > 0 {
+			dbQuery = dbQuery.Where("protocol IN (?)", query.Protocols)
 		}
 		if err := dbQuery.Order("id desc").Limit(count).Find(&attacks).Error; err != nil {
 			log.Printf("failed to get attacks: %v", err)
