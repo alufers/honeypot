@@ -47,6 +47,7 @@
     { value: "username_entered" },
     { value: "authenticated" },
     { value: "command_entered" },
+    { value: "ssh_command" },
   ];
   let protocolsOptions = [{ value: "telnet" }, { value: "ssh" }];
   let protocols = ["telnet", "ssh"];
@@ -54,6 +55,7 @@
     "username_entered",
     "authenticated",
     "command_entered",
+    "ssh_command",
   ];
   function formatDate(d: string) {
     return new Date(d).toLocaleString();

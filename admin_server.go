@@ -86,6 +86,16 @@ func RunAdminServer() {
 		return c.JSON(stats)
 	})
 
+	app.Get("/api/attacks/stats/by-time", func(c *fiber.Ctx) error {
+
+		stats := make([]map[string]interface{}, 0)
+		if err := db.Raw("SELECT  strftime(?, created_at) as time, protocol, count(*) AS count FROM attacks GROUP BY protocol, time").Scan(&stats).Error; err != nil {
+			log.Printf("failed to get attack stats: %v", err)
+			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+		}
+		return c.JSON(stats)
+	})
+
 	app.Get("/api/credentials/stats/passwords", func(c *fiber.Ctx) error {
 
 		stats := make([]map[string]interface{}, 0)

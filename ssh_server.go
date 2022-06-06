@@ -68,7 +68,18 @@ func RunSSHServer() {
 				panic(err)
 			}
 		} else {
-			s.Write([]byte("AAAAAH"))
+			attack := &Attack{
+				Protocol:       "ssh",
+				SourceIP:       strings.Split(s.RemoteAddr().String(), ":")[0],
+				Contents:       s.RawCommand(),
+				Classification: "ssh_command",
+			}
+			if err := AttackStarted(attack); err != nil {
+				panic(err)
+			}
+			defer AttackFinished(attack)
+
+			s.Write([]byte("ok mocz\n"))
 			s.Exit(1)
 		}
 	})
