@@ -118,4 +118,15 @@ Print system information
         -v      Kernel version
         -i      Hardware platform
         -o      OS name
-`}
+`,
+	"rm": busyboxHeader + `
+
+Usage: rm [-irf] FILE...
+
+Remove (unlink) FILEs
+
+        -i      Always prompt before removing
+        -f      Never prompt
+        -R,-r   Recurse
+`,
+}

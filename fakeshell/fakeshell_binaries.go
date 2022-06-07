@@ -434,6 +434,38 @@ func init() {
 			c.Printf("%v\n", strings.Join(result, " "))
 			return
 		},
+		"rm": func(ctx context.Context, args []string) (erro error) {
+			c := UnwrapCtx(ctx)
+			flags, rest, err := ParseBeginningShortFlagsValidated(args, "irRf")
+			if len(args) < 1 || err != nil {
+				if err != nil {
+					c.Printfe("rm: %s\n", err.Error())
+				}
+				c.Printf(busyboxHelps["rm"])
+				return interp.NewExitStatus(1)
+			}
+			_, recursive := flags["r"]
+			queue := []string{}
+			for _, arg := range rest {
+				queue = append(queue, c.Abs(arg))
+				if !recursive {
+					if stat,err := c.FS.Stat(c.Abs(arg)); err != nil {
+						c.Printf("rm: %s\n", err.Error())
+						return interp.NewExitStatus(1)
+					} else if stat.IsDir() {
+						c.Printf("rm: cannot remove '%s': Is a directory\n", arg)
+						return interp.NewExitStatus(1)
+					}
+				}
+			}
+			for _, arg := range queue {
+				if err := c.FS.Remove(arg); err != nil {
+					c.Printf("rm: %s\n", err.Error())
+					return interp.NewExitStatus(1)
+				}
+			}
+			return
+		},
 	}
 
 }
