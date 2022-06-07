@@ -23,6 +23,17 @@ func ParseBeginningShortFlags(args []string) (flags map[string]bool, rest []stri
 	return
 }
 
+func ParseBeginningShortFlagsValidated(args []string, validFlags string) (flags map[string]bool, rest []string, err error) {
+	flags, rest = ParseBeginningShortFlags(args)
+	for flag := range flags {
+		if !strings.Contains(validFlags, flag) {
+			err = fmt.Errorf("invalid flag: %s", flag)
+			return
+		}
+	}
+	return
+}
+
 //ParseFlagsDDStyle parses flags like "dd if=/dev/zero of=/dev/null bs=1M count=1" as "if": "/dev/zero", "of": "/dev/null", "bs": "1M", "count": "1"
 func ParseFlagsDDStyle(args []string) (flags map[string]string, badFlags bool) {
 	flags = map[string]string{}

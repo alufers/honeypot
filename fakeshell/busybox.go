@@ -1,5 +1,14 @@
 package fakeshell
 
+var unameData = map[string]string{
+	"m": "mips",
+	"n": "papaj-2137XG",
+	"r": "5.10.88",
+	"s": "Linux",
+	"v": "#0 SMP Tue Dec 28 17:04:13 2021",
+	"o": "GNU/Linux",
+}
+
 var busyboxSymlinks = []string{
 	"/bin/adduser", "/bin/ar", "/bin/ash", "/bin/awk", "/bin/brctl", "/bin/bunzip2",
 	"/bin/bzcat", "/bin/bzip2", "/bin/cat", "/bin/chmod", "/bin/chpasswd",
@@ -15,7 +24,7 @@ var busyboxSymlinks = []string{
 	"/bin/syslogd", "/bin/tail", "/bin/tar", "/bin/tftp", "/bin/top", "/bin/true",
 	"/bin/udhcpc", "/bin/udhcpc.script", "/bin/umount", "/bin/uncompress",
 	"/bin/unlzma", "/bin/unzip", "/bin/uptime", "/bin/vconfig", "/bin/vi",
-	"/bin/wc", "/bin/xargs", "/bin/zcat", "/bin/id"}
+	"/bin/wc", "/bin/xargs", "/bin/zcat", "/bin/id", "/bin/uname"}
 
 var busyboxHeader = "BusyBox v1.13.4 (2020-04-28 13:57:36 CST) multi-call binary"
 
@@ -94,4 +103,19 @@ Copy a file with converting and formatting
 	oflag=append	Open output in append mode
 
 N may be suffixed by c (1), w (2), b (512), kB (1000), k (1024), MB, M, GB, G`,
-}
+	"uname": busyboxHeader + `
+
+Usage: uname [-amnrspvio]
+
+Print system information
+
+        -a      Print all
+        -m      Machine (hardware) type
+        -n      Hostname
+        -r      Kernel release
+        -s      Kernel name (default)
+        -p      Processor type
+        -v      Kernel version
+        -i      Hardware platform
+        -o      OS name
+`}

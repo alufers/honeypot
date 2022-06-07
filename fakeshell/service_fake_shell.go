@@ -9,6 +9,7 @@ import (
 
 	"github.com/blang/vfs"
 	"golang.org/x/term"
+	"mvdan.cc/sh/v3/interp"
 	"mvdan.cc/sh/v3/syntax"
 )
 
@@ -67,4 +68,24 @@ func ServiceFakeShellOnTerminal(t *term.Terminal, r io.Reader, feedback io.Write
 		runner.Run(ctx, file)
 
 	}
+}
+
+func ServeSingleCommand(cmd string, r io.Reader, w io.Writer, feedback io.Writer) (error, uint8) {
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, "FS", MakeFS())
+	runner := createRunner(r, io.MultiWriter(w, feedback), ctx.Value("FS").(vfs.Filesystem))
+	file, err := syntax.NewParser().Parse(strings.NewReader(cmd), "")
+	feedback.Write([]byte("# "))
+	feedback.Write([]byte(cmd))
+	feedback.Write([]byte("\r\n"))
+	if err != nil {
+		feedback.Write([]byte("-ash: syntax error: " + err.Error() + "\r\n"))
+		return err, 1
+	}
+	err = runner.Run(ctx, file)
+	if status, ok := interp.IsExitStatus(err); ok {
+		return nil, status
+	}
+
+	return nil, 0
 }

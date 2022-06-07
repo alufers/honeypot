@@ -410,6 +410,30 @@ func init() {
 			}
 			return
 		},
+		"uname": func(ctx context.Context, args []string) (erro error) {
+			c := UnwrapCtx(ctx)
+			flags, _, err := ParseBeginningShortFlagsValidated(args, "amnrspvio")
+			if err != nil {
+				c.Printfe("uname: %s\n", err.Error())
+				c.Printfe(busyboxHelps["uname"])
+				return interp.NewExitStatus(1)
+			}
+			_, all := flags["a"]
+			result := []string{}
+			delete(flags, "a")
+			possibleFlags := []string{"m", "n", "r", "s", "p", "v", "i", "o"}
+			for _, flag := range possibleFlags {
+				if _, ok := flags[flag]; ok || all {
+					val := unameData[flag]
+					if val == "" {
+						val = "unknown"
+					}
+					result = append(result, val)
+				}
+			}
+			c.Printf("%v\n", strings.Join(result, " "))
+			return
+		},
 	}
 
 }

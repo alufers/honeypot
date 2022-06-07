@@ -71,7 +71,7 @@ func RunSSHServer() {
 			attack := &Attack{
 				Protocol:       "ssh",
 				SourceIP:       strings.Split(s.RemoteAddr().String(), ":")[0],
-				Contents:       s.RawCommand(),
+				Contents:       "",
 				Classification: "ssh_command",
 			}
 			if err := AttackStarted(attack); err != nil {
@@ -79,8 +79,11 @@ func RunSSHServer() {
 			}
 			defer AttackFinished(attack)
 
-			s.Write([]byte("ok mocz\n"))
-			s.Exit(1)
+			if err, exitCode := fakeshell.ServeSingleCommand(s.RawCommand(), s, s, attack); err != nil {
+				panic(err)
+			} else {
+				s.Exit(int(exitCode))
+			}
 		}
 	})
 
