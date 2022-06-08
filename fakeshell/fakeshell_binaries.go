@@ -1,6 +1,7 @@
 package fakeshell
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"fmt"
@@ -449,7 +450,7 @@ func init() {
 			for _, arg := range rest {
 				queue = append(queue, c.Abs(arg))
 				if !recursive {
-					if stat,err := c.FS.Stat(c.Abs(arg)); err != nil {
+					if stat, err := c.FS.Stat(c.Abs(arg)); err != nil {
 						c.Printf("rm: %s\n", err.Error())
 						return interp.NewExitStatus(1)
 					} else if stat.IsDir() {
@@ -463,6 +464,103 @@ func init() {
 					c.Printf("rm: %s\n", err.Error())
 					return interp.NewExitStatus(1)
 				}
+			}
+			return
+		},
+		"grep": func(ctx context.Context, args []string) (erro error) {
+			c := UnwrapCtx(ctx)
+			if len(args) < 2 {
+				c.Printf(busyboxHelps["grep"])
+				return interp.NewExitStatus(1)
+			}
+			reader := bufio.NewReader(c.Stdin)
+			pattern := args[0]
+
+			for {
+				line, err := reader.ReadString('\n')
+				if err != nil {
+					if errors.Is(err, io.EOF) {
+						break
+					}
+					c.Printf("grep: %s\n", err.Error())
+					return interp.NewExitStatus(1)
+				}
+				if strings.Contains(line, pattern) {
+					c.Printf("%s", line)
+				}
+			}
+			return
+		},
+		"wc": func(ctx context.Context, args []string) (erro error) {
+			c := UnwrapCtx(ctx)
+			flags, rest, err := ParseBeginningShortFlagsValidated(args, "clwL")
+			if len(args) < 1 || err != nil {
+				if err != nil {
+					c.Printfe("wc: %s\n", err.Error())
+				}
+				c.Printf(busyboxHelps["wc"])
+				return interp.NewExitStatus(1)
+			}
+			_, countLines := flags["l"]
+			_, countWords := flags["w"]
+			_, countBytes := flags["c"]
+			_, longestLine := flags["L"]
+			if !countLines && !countWords && !countBytes && !longestLine {
+				countLines = true
+				countWords = true
+				countBytes = true
+			}
+			var totalLines, totalWords, totalBytes int
+			var longestLineLength int
+			if len(rest) == 0 {
+				rest = []string{"-"}
+			}
+			for _, arg := range rest {
+				var reader io.Reader
+				if arg == "-" {
+					reader = c.Stdin
+				} else {
+					if file, err := c.FS.OpenFile(c.Abs(arg), os.O_RDONLY, 0); err != nil {
+						c.Printf("wc: %s\n", err.Error())
+						return interp.NewExitStatus(1)
+					} else {
+						reader = file
+					}
+				}
+				counter := &ScanByteCounter{}
+				scanner := bufio.NewScanner(reader)
+				scanner.Split(counter.Wrap(bufio.ScanLines))
+				for scanner.Scan() {
+					totalLines++
+					line := scanner.Text()
+					if longestLine {
+						if len(line) > longestLineLength {
+							longestLineLength = len(line)
+						}
+					}
+					if countWords {
+						totalWords += len(strings.Fields(line))
+					}
+				}
+				if err := scanner.Err(); err != nil {
+					c.Printf("wc: %s\n", err.Error())
+					return interp.NewExitStatus(1)
+				}
+				if countBytes {
+					totalBytes += counter.BytesRead
+				}
+			}
+			if countLines {
+				c.Printf("%d\n", totalLines)
+			}
+			if countWords {
+				c.Printf("%d\n", totalWords)
+			}
+			if countBytes {
+				c.Printf("%d\n", totalBytes)
+			}
+			if longestLine {
+				c.Printf("%d\n", longestLineLength)
 			}
 			return
 		},

@@ -129,4 +129,14 @@ Remove (unlink) FILEs
         -f      Never prompt
         -R,-r   Recurse
 `,
+	"wc": busyboxHeader + `
+
+Usage: wc [-clwL] [FILE]...
+
+Count lines, words, and bytes for FILEs (or stdin)
+
+	-c	Count bytes
+	-l	Count newlines
+	-w	Count words
+	-L	Print longest line length`,
 }
