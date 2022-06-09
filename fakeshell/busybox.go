@@ -24,7 +24,7 @@ var busyboxSymlinks = []string{
 	"/bin/syslogd", "/bin/tail", "/bin/tar", "/bin/tftp", "/bin/top", "/bin/true",
 	"/bin/udhcpc", "/bin/udhcpc.script", "/bin/umount", "/bin/uncompress",
 	"/bin/unlzma", "/bin/unzip", "/bin/uptime", "/bin/vconfig", "/bin/vi",
-	"/bin/wc", "/bin/xargs", "/bin/zcat", "/bin/id", "/bin/uname"}
+	"/bin/wc", "/bin/xargs", "/bin/zcat", "/bin/id", "/bin/uname", "/bin/which"}
 
 var busyboxHeader = "BusyBox v1.13.4 (2020-04-28 13:57:36 CST) multi-call binary"
 
@@ -138,5 +138,12 @@ Count lines, words, and bytes for FILEs (or stdin)
 	-c	Count bytes
 	-l	Count newlines
 	-w	Count words
-	-L	Print longest line length`,
+	-L	Print longest line length
+`,
+	"which": busyboxHeader + `
+	
+Usage: which COMMAND...
+
+Locate COMMAND
+`,
 }

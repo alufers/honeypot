@@ -564,6 +564,32 @@ func init() {
 			}
 			return
 		},
+		"which": func(ctx context.Context, args []string) (erro error) {
+			c := UnwrapCtx(ctx)
+			_, rest, err := ParseBeginningShortFlagsValidated(args, "")
+			if len(args) < 1 {
+				return
+			}
+			if err != nil {
+				c.Printfe("which: %s\n", err.Error())
+				c.Printfe(busyboxHelps["which"])
+				return interp.NewExitStatus(1)
+			}
+			cmd := rest[0]
+
+			path := strings.Split(c.Env.Get("PATH").String(), ":")
+			var foundFile string
+			for _, p := range path {
+				abs, _ := filepath.Abs(filepath.Join(p, cmd))
+				if info, err := c.FS.Stat(abs); err == nil && !info.IsDir() {
+					foundFile = abs
+					break
+				}
+			}
+			c.Printf("%s\n", foundFile)
+
+			return
+		},
 	}
 
 }
