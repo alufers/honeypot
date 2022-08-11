@@ -7,12 +7,14 @@
   interface IAttackPerDay {
     time: string;
     count: number;
-    protocol: string;
+    group_key: string;
   }
 
+  export let groupKey = "action";
+  export let title = `Attacks per day by ${groupKey} (90 days)`;
   const chartDataPromise = fetchAPI<IAttackPerDay[]>(
     "GET",
-    "/api/attacks/stats/by-time?timeFormat=%Y-%m-%d"
+    "/api/attacks/stats/by-time?timeFormat=%Y-%m-%d&groupBy=" + groupKey
   ).then((attacksPerDay) => {
     let protocols = [];
     const map: {
@@ -30,10 +32,10 @@
       if (!map[att.time]) {
         map[att.time] = mapEntry;
       }
-      map[att.time].countByProtocol[att.protocol] = att.count;
+      map[att.time].countByProtocol[att.group_key] = att.count;
       map[att.time].totalCount += att.count;
-      if (!protocols.includes(att.protocol)) {
-        protocols.push(att.protocol);
+      if (!protocols.includes(att.group_key)) {
+        protocols.push(att.group_key);
       }
     });
     const N_DAYS = 90;
@@ -63,12 +65,12 @@
       <Chart
         {data}
         type="bar"
-        title="Connections per day (last 90 days)"
+        {title}
         barOptions={{ stacked: true, spaceRatio: 0.5 }}
-        colors={["#00b894", "#e84393" , "#0984e3"]}
+        colors={["#00b894", "#e84393", "#0984e3", "#ffeaa7", "#636e72"]}
         axisOptions={{
-            xAxisMode: 'tick',
-            xIsSeries: true,
+          xAxisMode: "tick",
+          xIsSeries: true,
         }}
       />
     </div>

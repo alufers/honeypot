@@ -590,6 +590,10 @@ func init() {
 
 			return
 		},
+		"nc": func(ctx context.Context, args []string) (erro error) {
+			// do nothing and return a success exit status
+			return
+		},
 	}
 
 }

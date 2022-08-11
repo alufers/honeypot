@@ -57,6 +57,15 @@
     "command_entered",
     "ssh_command",
   ];
+  let actions = [
+    "none",
+    "identification",
+    "honeypot_check",
+    "drop_binary",
+    "add_ssh_key",
+    "other",
+  ];
+  let actionOptions = actions.map((a) => ({ value: a }));
   function formatDate(d: string) {
     return new Date(d).toLocaleString();
   }
@@ -89,6 +98,7 @@
     loadingPromise = fetchAPI("GET", "/api/attacks", undefined, {
       classifications,
       protocols,
+      actions,
     }).then((data) => {
       attacks = attacks.concat(data);
     });
@@ -103,6 +113,11 @@
 
   function protocolsChanged(p: string[]) {
     protocols = p;
+    attacks = [];
+    loadMoreAttacks();
+  }
+  function onActionsChanged(a: string[]) {
+    actions = a;
     attacks = [];
     loadMoreAttacks();
   }
@@ -123,7 +138,10 @@
       if (a.inProgress) {
         return true;
       }
-      return classifications.includes(a.classification) && protocols.includes(a.protocol);
+      return (
+        classifications.includes(a.classification) &&
+        protocols.includes(a.protocol)
+      );
     });
   };
 </script>
@@ -140,6 +158,12 @@
     options={protocolsOptions}
     value={protocols}
     onInput={protocolsChanged}
+  />
+  Actions:
+  <CheckboxList
+    options={actionOptions}
+    value={actions}
+    onInput={onActionsChanged}
   />
   {#each attacks as attack}
     <div class="attack">

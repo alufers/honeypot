@@ -22,6 +22,7 @@ type Attack struct {
 	Contents       string `json:"contents"`
 	Duration       int    `json:"duration"` // milliseconds
 	Classification string `json:"classification"`
+	Action         string `json:"action"`
 }
 
 func (a *Attack) Write(data []byte) (int, error) {
@@ -80,6 +81,7 @@ func AttackFinished(attack *Attack) error {
 		log.Printf("failed to save attack: %v", err)
 		return err
 	}
+	attack.Action = classifyAction(attack)
 	currentAttacksMutex.Lock()
 	defer currentAttacksMutex.Unlock()
 
@@ -88,7 +90,7 @@ func AttackFinished(attack *Attack) error {
 	return nil
 }
 
-//WrapConnReaderWriter wraps a reader and a wirter, and extracts the data to be saved in the database
+// WrapConnReaderWriter wraps a reader and a wirter, and extracts the data to be saved in the database
 func WrapConnReaderWriter(a *Attack, reader io.Reader, writer io.Writer, lineCallback func(string)) (io.Reader, io.Writer) {
 	cbR, cbW := io.Pipe()
 	go func() {

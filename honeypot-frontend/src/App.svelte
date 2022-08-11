@@ -22,6 +22,7 @@
       <PasswordsTopList />
     </div>
   </div>
+  <AttacksPerDayChart  groupKey="protocol"/>
   <AttacksPerDayChart />
   <AttacksList />
 </main>

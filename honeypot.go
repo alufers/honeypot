@@ -2,7 +2,9 @@ package main
 
 import (
 	"log"
+	"strings"
 	"sync"
+	"time"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -13,46 +15,75 @@ var db *gorm.DB
 var listeningProtocolsMutex = &sync.Mutex{}
 var listeningProtocols = []string{}
 
-func migrateClassifications() {
-	rows, err := db.Model(&Attack{}).Where("classification = \"\" OR classification IS NULL").Rows()
-	if err != nil {
-		panic(err)
+func containsAny(s string, substrs []string) bool {
+	for _, substr := range substrs {
+		if strings.Contains(s, substr) {
+			return true
+		}
 	}
+	return false
+}
 
-	attacksToSave := []*Attack{}
-	func() {
-		defer rows.Close()
-		for rows.Next() {
-			var attack Attack
-			if err := db.ScanRows(rows, &attack); err != nil {
-				panic(err)
-			}
+func migrateActions() {
 
-			emptyValues := []string{
-				"Papaj2137-XG Broadband Router\r\nVosLogin:",
-				"",
+	log.Printf("Migrating actions!\n")
+	var totalUnmigrated int64
+	if err := db.Model(&Attack{}).Where("action IS NULL").Count(&totalUnmigrated).Error; err != nil {
+		log.Fatalf("failed to count unmigrated attacks: %v", err)
+	}
+	var unmigratedLeft int64 = totalUnmigrated
+	const batchSize = 3000
+	const workerCount = 10
+
+	// workerJobs := make(chan *Attack, 4)
+	// workerCount := make(chan *Attack, 4)
+
+	for {
+
+		timeStart := time.Now()
+		var attacks []Attack
+		db.Select([]string{"contents", "id", "classification"}).Where("action IS NULL").Limit(batchSize).Find(&attacks)
+		if len(attacks) == 0 {
+			break
+		}
+		updates := map[string][]uint{}
+		for _, attack := range attacks {
+
+			attack.Action = classifyAction(&attack)
+
+			// if err := db.
+			// 	Model(&attack).
+			// 	Where("id = ?", attack.ID).
+			// 	Update("action", attack.Action).Error; err != nil {
+			// 	log.Fatalf("failed to update attack action: %v", err)
+			// }
+			// if err := db.Save(&attack).Error; err != nil {
+			// 	log.Fatalf("failed to save attack: %v", err)
+			// }
+			if updates[attack.Action] == nil {
+				updates[attack.Action] = []uint{}
 			}
-			var isEmptyValue bool
-			for _, emptyValue := range emptyValues {
-				if attack.Contents == emptyValue {
-					isEmptyValue = true
-					break
-				}
+			updates[attack.Action] = append(updates[attack.Action], attack.ID)
+		}
+		for action, ids := range updates {
+			if err := db.Model(&Attack{}).Where("id IN (?)", ids).Update("action", action).Error; err != nil {
+				log.Fatalf("failed to update attack action batch: %v", err)
 			}
-			if isEmptyValue {
-				attack.Classification = "empty"
-			} else {
-				attack.Classification = "authenticated"
-			}
-			attacksToSave = append(attacksToSave, &attack)
 		}
 
-	}()
-	log.Printf("Migrating %d attacks", len(attacksToSave))
-	for _, attack := range attacksToSave {
-		if err := db.Save(attack).Error; err != nil {
-			panic(err)
-		}
+		timeEnd := time.Now()
+		duration := timeEnd.Sub(timeStart)
+		rate := float64(batchSize) / float64(duration.Seconds())
+		eta := time.Duration(float64(unmigratedLeft) / rate * float64(time.Second))
+		unmigratedLeft -= int64(len(attacks))
+		log.Printf(
+			"migrated %d/%d percent: %.2f%%    Rate: %.2f ETA: %v",
+			totalUnmigrated-unmigratedLeft,
+			totalUnmigrated,
+			float64(totalUnmigrated-unmigratedLeft)/float64(totalUnmigrated)*100,
+			rate,
+			eta,
+		)
 	}
 
 }
@@ -66,10 +97,10 @@ func main() {
 
 	err = db.AutoMigrate(&Attack{}, &CredentialUsage{})
 	if err != nil {
-		panic("failed to migrate database")
+		log.Fatalf("failed to migrate database: %v", err)
 	}
-	migrateClassifications()
-	db.Model(&Attack{}).Where("1=1").Update("in_progress", false)
+	migrateActions()
+	db.Model(&Attack{}).Where("in_progress = ?", true).Update("in_progress", false)
 	go RunTelnetServer()
 	go RunSSHServer()
 	RunAdminServer()

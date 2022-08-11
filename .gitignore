@@ -1,3 +1,6 @@
 IP2LOCATION-LITE-DB11.IPV6.BIN
 honeypot.db
 fakeshell/rootfs
+honeypot_bkp.db 
+honeypot
+cpu.prof

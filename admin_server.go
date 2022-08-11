@@ -3,10 +3,12 @@ package main
 import (
 	"embed"
 	"encoding/json"
+	"fmt"
 	"log"
 	"math"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -33,12 +35,17 @@ func RunAdminServer() {
 		return c.JSON(listeningProtocols)
 	})
 
+	app.Get("/api/actions", func(c *fiber.Ctx) error {
+		return c.JSON(attackActions)
+	})
+
 	app.Get("/api/attacks", func(c *fiber.Ctx) error {
 		query := struct {
 			Count           string   `query:"count"`
 			Before          string   `query:"before"`
 			Classifications []string `query:"classifications"`
 			Protocols       []string `query:"protocols"`
+			Actions         []string `query:"actions"`
 		}{}
 		if err := c.QueryParser(&query); err != nil {
 			return err
@@ -59,6 +66,9 @@ func RunAdminServer() {
 		}
 		if query.Protocols != nil && len(query.Protocols) > 0 {
 			dbQuery = dbQuery.Where("protocol IN (?)", query.Protocols)
+		}
+		if query.Actions != nil && len(query.Actions) > 0 {
+			dbQuery = dbQuery.Where("action IN (?)", query.Actions)
 		}
 		if err := dbQuery.Order("id desc").Limit(count).Find(&attacks).Error; err != nil {
 			log.Printf("failed to get attacks: %v", err)
@@ -89,8 +99,26 @@ func RunAdminServer() {
 	app.Get("/api/attacks/stats/by-time", func(c *fiber.Ctx) error {
 
 		stats := make([]map[string]interface{}, 0)
+		groupableBy := []string{
+			"protocol",
+			"classification",
+			"country_code",
+			"action",
+		}
+		groupBy := c.Query("groupBy", "protocol")
+		contains := false
+		for _, g := range groupableBy {
+			if g == groupBy {
+				contains = true
+				break
+			}
+		}
+		if !contains {
+			return c.Status(400).JSON(fiber.Map{"error": "invalid groupBy, can be: " + strings.Join(groupableBy, ", ")})
+		}
+		log.Printf("debug: groupBy: %v", groupBy)
 		if err := db.Raw(
-			"SELECT  strftime(?, created_at) as time, protocol, count(*) AS count FROM attacks GROUP BY protocol, time ORDER BY time ASC",
+			fmt.Sprintf("SELECT strftime(?, created_at) as time, %v AS group_key, count(*) AS count FROM attacks GROUP BY group_key, time ORDER BY time ASC", groupBy),
 			c.Query("timeFormat"),
 		).Scan(&stats).Error; err != nil {
 			log.Printf("failed to get attack stats: %v", err)
