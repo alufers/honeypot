@@ -90,7 +90,7 @@ func RunAdminServer() {
 
 		stats := make([]map[string]interface{}, 0)
 		if err := db.Raw(
-			"SELECT  strftime(?, created_at) as time, protocol, count(*) AS count FROM attacks GROUP BY protocol, time",
+			"SELECT  strftime(?, created_at) as time, protocol, count(*) AS count FROM attacks GROUP BY protocol, time ORDER BY time ASC",
 			c.Query("timeFormat"),
 		).Scan(&stats).Error; err != nil {
 			log.Printf("failed to get attack stats: %v", err)

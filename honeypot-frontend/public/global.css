@@ -3,6 +3,7 @@ html, body {
 	width: 100%;
 	height: 100%;
 	--primary: #00b894;
+	--foreground: #eee;
 }
 
 body {
@@ -12,5 +13,15 @@ body {
 	box-sizing: border-box;
 	font-family: monospace;
 	background: black;
-	color: #eee;
+	color: var(--foreground);
+}
+
+
+svg .title, svg text {
+	color: var(--foreground);
+	fill: var(--foreground);
+}
+
+svg .line-horizontal, svg .line-vertical {
+	stroke: #aaa !important;
 }

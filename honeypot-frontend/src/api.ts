@@ -13,12 +13,12 @@ if(query.has("api")) {
   API_URL = query.get("api");
 }
 
-export async function fetchAPI(
+export async function fetchAPI<T = any>(
   method: string,
   url: string,
   body?: any,
   query?: any
-) {
+):Promise<T> {
   if (query) {
     url += "?";
     for (const key in query) {

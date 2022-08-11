@@ -1,5 +1,6 @@
 <script lang="ts">
   import AttacksList from "./AttacksList.svelte";
+  import AttacksPerDayChart from "./AttacksPerDayChart.svelte";
   import CountriesTopList from "./CountriesTopList.svelte";
   import PasswordsTopList from "./PasswordsTopList.svelte";
   import ProtocolList from "./ProtocolList.svelte";
@@ -21,6 +22,7 @@
       <PasswordsTopList />
     </div>
   </div>
+  <AttacksPerDayChart />
   <AttacksList />
 </main>
 
@@ -46,7 +48,7 @@
     }
     @media (max-width: 900px) {
       flex-direction: column;
-      &> div {
+      & > div {
         margin-bottom: 1rem;
       }
     }
