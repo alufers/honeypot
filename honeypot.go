@@ -28,7 +28,7 @@ func migrateActions() {
 
 	log.Printf("Migrating actions!\n")
 	var totalUnmigrated int64
-	if err := db.Model(&Attack{}).Where("action IS NULL").Count(&totalUnmigrated).Error; err != nil {
+	if err := db.Model(&Attack{}).Where("action IS NULL OR action = ''").Count(&totalUnmigrated).Error; err != nil {
 		log.Fatalf("failed to count unmigrated attacks: %v", err)
 	}
 	var unmigratedLeft int64 = totalUnmigrated
@@ -42,7 +42,7 @@ func migrateActions() {
 
 		timeStart := time.Now()
 		var attacks []Attack
-		db.Select([]string{"contents", "id", "classification"}).Where("action IS NULL").Limit(batchSize).Find(&attacks)
+		db.Select([]string{"contents", "id", "classification"}).Where("action IS NULL OR action = ''").Limit(batchSize).Find(&attacks)
 		if len(attacks) == 0 {
 			break
 		}

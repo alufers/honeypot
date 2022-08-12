@@ -77,11 +77,11 @@ func AttackUpdated(attack *Attack) error {
 func AttackFinished(attack *Attack) error {
 	attack.InProgress = false
 	attack.Duration = int(time.Now().Sub(attack.CreatedAt).Milliseconds())
+	attack.Action = classifyAction(attack)
 	if err := db.Save(attack).Error; err != nil {
 		log.Printf("failed to save attack: %v", err)
 		return err
 	}
-	attack.Action = classifyAction(attack)
 	currentAttacksMutex.Lock()
 	defer currentAttacksMutex.Unlock()
 

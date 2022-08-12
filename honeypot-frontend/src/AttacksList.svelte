@@ -22,6 +22,7 @@
     contents: string;
     duration: number;
     classification: string;
+    action: string;
   }
 
   let propertyLabels = {
@@ -35,6 +36,7 @@
     location: "Location",
     duration: "Duration",
     classification: "classification",
+    action: "Action",
   };
 
   let propertyTypes = {

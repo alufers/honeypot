@@ -47,11 +47,18 @@
       labels: lastNDays.map((d) => d.toLocaleDateString()),
       datasets: protocols.map((p) => ({
         name: p,
+        _sum: 0,
         values: lastNDays.map(
           (d) => map[d.toISOString().substring(0, 10)]?.countByProtocol[p] || 0
         ),
       })),
     };
+
+    chartData.datasets = chartData.datasets.map((d) => ({
+      ...d,
+      _sum: d.values.reduce((a, b) => a + b, 0),
+    }));
+    chartData.datasets.sort((a, b) => b._sum - a._sum);
 
     return chartData;
   });
