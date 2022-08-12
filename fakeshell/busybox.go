@@ -24,7 +24,7 @@ var busyboxSymlinks = []string{
 	"/bin/syslogd", "/bin/tail", "/bin/tar", "/bin/tftp", "/bin/top", "/bin/true",
 	"/bin/udhcpc", "/bin/udhcpc.script", "/bin/umount", "/bin/uncompress",
 	"/bin/unlzma", "/bin/unzip", "/bin/uptime", "/bin/vconfig", "/bin/vi",
-	"/bin/wc", "/bin/xargs", "/bin/zcat", "/bin/id", "/bin/uname", "/bin/which"}
+	"/bin/wc", "/bin/xargs", "/bin/zcat", "/bin/id", "/bin/uname", "/bin/which", "/bin/w"}
 
 var busyboxHeader = "BusyBox v1.13.4 (2020-04-28 13:57:36 CST) multi-call binary"
 
