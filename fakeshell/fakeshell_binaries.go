@@ -140,6 +140,10 @@ func init() {
 			c.Printf("%s: applet not found\n", applet)
 			return interp.NewExitStatus(1)
 		},
+		"/bin/nc": func(ctx context.Context, args []string) (erro error) {
+			// do nothing and return a success exit status
+			return
+		},
 	}
 
 	busyboxApplets = map[string]FakeBinary{
@@ -590,8 +594,12 @@ func init() {
 
 			return
 		},
-		"nc": func(ctx context.Context, args []string) (erro error) {
-			// do nothing and return a success exit status
+		"w": func(ctx context.Context, args []string) (erro error) {
+			c := UnwrapCtx(ctx)
+			c.Printf(`11:22:37 up 55 days, 22:28,  3 users,  load average: 0.03, 0.01, 0.00
+USER    TTY        LOGIN@   IDLE   JCPU   PCPU WHAT
+root    pts/0     11:22    5.00s  0.67s  0.00s w
+			`)
 			return
 		},
 	}
