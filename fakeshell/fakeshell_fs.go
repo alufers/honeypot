@@ -69,6 +69,9 @@ func MakeFS() vfs.Filesystem {
 		vfs.MkdirAll(fs, dir, 0755)
 	}
 	vfs.WriteFile(fs, "/bin/busybox", busybox, 0755)
+	for path := range fakeshellBinaries {
+		vfs.WriteFile(fs, path, busybox, 0755)
+	}
 	for _, symlink := range busyboxSymlinks {
 		fs.Symlink("/bin/busybox", symlink)
 	}
