@@ -65,6 +65,7 @@ func (h *HoneypotMysqlHandler) AuthCheck(session *driver.Session) error {
 		Protocol:       "mysql",
 		SourceIP:       strings.Split(session.Addr(), ":")[0],
 		Contents:       "",
+		Action:         "other",
 		Classification: "authenticated",
 	}
 	if err := AttackStarted(attack); err != nil {
