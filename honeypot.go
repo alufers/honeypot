@@ -103,5 +103,6 @@ func main() {
 	db.Model(&Attack{}).Where("in_progress = ?", true).Update("in_progress", false)
 	go RunTelnetServer()
 	go RunSSHServer()
+	go RunMysqlServer()
 	RunAdminServer()
 }

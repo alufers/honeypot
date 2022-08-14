@@ -51,8 +51,8 @@
     { value: "command_entered" },
     { value: "ssh_command" },
   ];
-  let protocolsOptions = [{ value: "telnet" }, { value: "ssh" }];
-  let protocols = ["telnet", "ssh"];
+  let protocols = ["telnet", "ssh", "mysql"];
+  let protocolsOptions = protocols.map((a) => ({ value: a }));
   let classifications = [
     "username_entered",
     "authenticated",
